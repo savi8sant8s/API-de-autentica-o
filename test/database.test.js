@@ -1,9 +1,9 @@
 const assert = require('assert');
 const AuthDatabase = require("../database");
 
-
 describe('Consultas no SQLITE', function () {
   let authdb = new AuthDatabase();
+  let token;
   let user = {
     id: 1,
     name: "Sávio Santos",
@@ -11,21 +11,22 @@ describe('Consultas no SQLITE', function () {
     password: "dshdjh"
   };
 
-  it('Criar usuário na tabela users', function () {
-    return authdb.createUser(user.name, user.email, user.password).then((res) => {
-      assert.strictEqual(res.success, true);
+  it('Cadastrar usuário', function () {
+    return authdb.register(user.name, user.email, user.password).then((res) => {
+      assert.deepStrictEqual(res.status, "success");
     });
   });
 
-  it('Verificar se usuário existe', function () {
-    return authdb.isRegistered(user.email).then((res) => {
-      assert.strictEqual(res.success, true);
+  it('Fazer login', function () {
+    return authdb.login(user.email, user.password).then((res) => {
+      token = res.token;
+      assert.deepStrictEqual(res.status, "success");
     });
   });
 
-  it('Verificar se sessão está aberta', function () {
-    return authdb.isLogged(user.id).then((res) => {
-      assert.strictEqual(res.success, false);
+  it('Fazer logout', function () {
+    return authdb.logout(token).then((res) => {
+      assert.deepStrictEqual(res.status, "success");
     });
   });
 });
