@@ -1,5 +1,5 @@
 const assert = require('assert');
-const Validation = require("../Validation");
+const Validation = require("../auth/validation");
 
 describe('Consultas no SQLITE', function () {
     let validation = new Validation();
