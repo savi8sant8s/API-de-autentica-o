@@ -19,7 +19,8 @@ const CODE_STATUS = {
         NAME: 41,
         EMAIL: 42,
         PASSWORD: 43,
-        TOKEN: 44
+        TOKEN: 44,
+        BODY: 45
     },
     QUERY_ERROR: 51
 };

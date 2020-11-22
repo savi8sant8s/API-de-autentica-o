@@ -1,85 +1,85 @@
 const express = require('express');
 const app = express();
 const bodyParser = require('body-parser')
-
 const moment = require("moment");
-
+const AuthDatabase = require('./auth-database');
 const Validation = require('./validation');
-const Database = require('./database');
+const CODE_STATUS = require('./code-status');
 
 app.use(bodyParser.json());
 
 module.exports = function () {
     let validation = new Validation();
-    let database = new Database();
+    let database = new AuthDatabase();
 
     app.post('/register', async function (req, res) {
-        let timestamp = moment().format();
-        let invalid = {
+        let invalidField = {
             body: !('name' in req.body && 'email' in req.body && 'password' in req.body),
             name: !validation.validName(req.body.name),
             email: !validation.validEmail(req.body.email),
             password: !validation.validPassword(req.body.password)
         };
+        let response = {timestamp: moment().format()};
 
-        if (invalid.body) {
-            res.send({ timestamp: timestamp, status: "invalidBody" });
+        if (invalidField.body) {
+            response.status = CODE_STATUS.INVALID_FIELD.BODY;
         }
-        else if (invalid.name) {
-            res.send({ timestamp: timestamp, status: "invalidName" });
+        else if (invalidField.name) {
+            response.status = CODE_STATUS.INVALID_FIELD.NAME;
         }
-        else if (invalid.email) {
-            res.send({ timestamp: timestamp, status: "invalidEmail" });
+        else if (invalidField.email) {
+            response.status = CODE_STATUS.INVALID_FIELD.EMAIL;
         }
-        else if (invalid.password) {
-            res.send({ timestamp: timestamp, status: "invalidPassword" });
+        else if (invalidField.password) {
+            response.status = CODE_STATUS.INVALID_FIELD.PASSWORD;
         }
         else {
-            let result = await database.register(req.body.name, req.body.email, req.body.password);
-            res.send(result);
-        }
+            response = await database.register(req.body.name, req.body.email, req.body.password);
+        } 
+        res.send(response);
     });
 
     app.post('/login', async function (req, res) {
-        let timestamp = moment().format();
-        let invalid = {
+        let invalidField = {
             body: !('email' in req.body && 'password' in req.body),
             email: !validation.validEmail(req.body.email),
             password: !validation.validPassword(req.body.password)
         };
+        let response = {timestamp: moment().format()};
 
-        if (invalid.body) {
-            res.send({ timestamp: timestamp, status: "invalidBody" });
+        if (invalidField.body) {
+            response.status = CODE_STATUS.INVALID_FIELD.BODY;
         }
-        else if (invalid.email) {
-            res.send({ timestamp: timestamp, status: "invalidEmail" });
+        else if (invalidField.email) {
+            response.status = CODE_STATUS.INVALID_FIELD.EMAIL;
         }
-        else if (invalid.password) {
-            res.send({ timestamp: timestamp, status: "invalidPassword" });
+        else if (invalidField.password) {
+            response.status = CODE_STATUS.INVALID_FIELD.PASSWORD;
         }
         else {
-            let result = await database.login(req.body.email, req.body.password);
-            res.send(result);
+            response = await database.login(req.body.email, req.body.password);
         }
+        res.send(response);
     });
 
     app.put('/logout', async function (req, res) {
-        let timestamp = moment().format();
-        let invalid = {
+        let invalidField = {
             body: !('token' in req.body),
             token: !validation.validToken(req.body.token)
         };
+        let response = {timestamp: moment().format()};
 
-        if (invalid.body) {
-            res.send({ timestamp: timestamp, status: "invalidBody" });
+        if (invalidField.body) {
+            response.status = CODE_STATUS.INVALID_FIELD.BODY;
         }
-        else if (invalid.email) {
-            res.send({ timestamp: timestamp, status: "invalidToken" });
+        else if (invalidField.email) {
+            response.status = CODE_STATUS.INVALID_FIELD.EMAIL;
         }
         else {
-            let result = await database.logout(req.body.token);
-            res.send(result);
+            response = await database.logout(req.body.token);
         }
+        res.send(response);
     });
+
     return app;
 };

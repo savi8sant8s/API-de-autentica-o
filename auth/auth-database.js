@@ -43,37 +43,27 @@ class AuthDatabase {
 
     checkIfRegistered(email) {
         return new Promise((resolve, reject) => {
-            
-            database.serialize(()=>{
+
+            database.serialize(() => {
                 let sql = "SELECT TRUE FROM users WHERE users.email = ?";
 
                 database.get(sql, email, (err, row) => {
-                    let timestamp = moment().format();
+                    let response = { timestamp: moment().format() };
 
                     if (err) {
-                        let response = {
-                            timestamp: timestamp,
-                            status: CODE_STATUS.QUERY_ERROR,
-                            err: err.message
-                        };
+                        response.status = CODE_STATUS.QUERY_ERROR
+                        response.error = err.message;
                         reject(response);
                     }
                     else if (row) {
-                        let response = {
-                            timestamp: timestamp, 
-                            status: CODE_STATUS.REGISTER.ALREADY_REGISTERED, 
-                        };
-                        resolve(response);
+                        response.status = CODE_STATUS.REGISTER.ALREADY_REGISTERED;
                     }
                     else {
-                        let response = {
-                            timestamp: timestamp, 
-                            status: CODE_STATUS.REGISTER.NOT_REGISTERED, 
-                        };
-                        resolve(response);
+                        response.status = CODE_STATUS.REGISTER.NOT_REGISTERED;
                     }
+                    resolve(response);
                 });
-            });   
+            });
         });
     }
 
@@ -86,25 +76,19 @@ class AuthDatabase {
                 let data = [timestamp, name, email, this.encryptPassword(password)];
 
                 database.run(sql, data, (err) => {
-                    let timestamp = moment().format();
+                    let response = { timestamp: moment().format() };
 
                     if (err) {
-                        let response = {
-                            timestamp: timestamp,
-                            status: CODE_STATUS.QUERY_ERROR,
-                            err: err.message
-                        };
+                        response.status = CODE_STATUS.QUERY_ERROR;
+                        response.error = err.message;
                         reject(response);
                     }
                     else {
-                        let response = {
-                            timestamp: timestamp, 
-                            status: CODE_STATUS.REGISTER.SUCCESS, 
-                        };
+                        response.status = CODE_STATUS.REGISTER.SUCCESS;
                         resolve(response);
                     }
                 });
-            });   
+            });
         });
     }
 
@@ -131,39 +115,27 @@ class AuthDatabase {
                 let data = email;
 
                 database.get(sql, data, (err, row) => {
-                    let timestamp = moment().format();
+                    let response = { timestamp: moment().format() };
 
                     if (err) {
-                        let response = {
-                            timestamp: timestamp,
-                            status: CODE_STATUS.QUERY_ERROR,
-                            err: err.message
-                        };
+                        response.status = CODE_STATUS.QUERY_ERROR;
+                        response.err = err.message;
                         reject(response);
                     }
                     else if (row) {
                         let passwordValid = bcrypt.compareSync(password, row.password);
+
                         if (passwordValid) {
-                            let response = {
-                                timestamp: timestamp, 
-                                status: CODE_STATUS.LOGIN.VALID_CREDENTIALS, 
-                                id: row.id
-                            };
-                            resolve(response);
+                            response.status = CODE_STATUS.LOGIN.VALID_CREDENTIALS;
+                            response.id = row.id;
                         }
                         else {
-                            let response = {
-                                timestamp: timestamp, 
-                                status: CODE_STATUS.LOGIN.INVALID_CREDENTIALS
-                            };
-                            resolve(response);
+                            response.status = CODE_STATUS.LOGIN.INVALID_CREDENTIALS;
                         }
+                        resolve(response);
                     }
                     else {
-                        let response = {
-                            timestamp: timestamp, 
-                            status: CODE_STATUS.LOGIN.USER_NOT_EXISTS
-                        };
+                        response.status = CODE_STATUS.LOGIN.USER_NOT_EXISTS;
                         resolve(response);
                     }
                 });
@@ -177,46 +149,34 @@ class AuthDatabase {
                 let sql = "SELECT token FROM sessions WHERE sessions.userId = ? AND status = 1";
 
                 database.get(sql, userId, (err, row) => {
-                    let timestamp = moment().format();
+                    let response = { timestamp: moment().format() };
 
                     if (err) {
-                        let response = {
-                            timestamp: timestamp,
-                            status: CODE_STATUS.QUERY_ERROR,
-                            err: err.message
-                        };
+                        response.status = CODE_STATUS.QUERY_ERROR;
+                        response.error = err.message;
                         reject(response);
                     }
                     else if (row) {
-                        let response = { 
-                            timestamp: timestamp, 
-                            status: CODE_STATUS.LOGIN.SUCCESS, 
-                            token: row.token 
-                        };
+                        response.status = CODE_STATUS.LOGIN.SUCCESS;
+                        response.token = row.token;
                         resolve(response);
                     }
                     else {
                         let token = randtoken.generate(16);
                         let sql = "INSERT INTO sessions(timestamp, token, userId, status) VALUES(?,?,?,1)";
-                        let data = [timestamp, token, userId];
+                        let data = [response.timestamp, token, userId];
 
                         database.run(sql, data, (err) => {
-                            let timestamp = moment().format();
+                            let response = { timestamp: moment().format() };
 
                             if (err) {
-                                let response = {
-                                    timestamp: timestamp,
-                                    status: CODE_STATUS.QUERY_ERROR,
-                                    err: err.message
-                                };
+                                response.status = CODE_STATUS.QUERY_ERROR;
+                                response.error = err.message;
                                 reject(response);
                             }
                             else {
-                                let response = {
-                                    timestamp: timestamp,
-                                    status: CODE_STATUS.LOGIN.SUCCESS,
-                                    token: token
-                                };
+                                response.status = CODE_STATUS.LOGIN.SUCCESS;
+                                response.token = token;
                                 resolve(response);
                             }
                         });
@@ -241,31 +201,22 @@ class AuthDatabase {
 
             database.serialize(() => {
                 let sql = "SELECT status FROM sessions WHERE sessions.token = ? AND sessions.status = 1";
-                
+
                 database.get(sql, token, (err, row) => {
-                    let timestamp = moment().format();
+                    let response = { timestamp: moment().format() };
+
                     if (err) {
-                        let response = {
-                            timestamp: timestamp, 
-                            status: CODE_STATUS.QUERY_ERROR, 
-                            err: err.message
-                        };
+                        response.status = CODE_STATUS.QUERY_ERROR;
+                        response.error = err.message;
                         reject(response);
                     }
                     else if (row) {
-                        let response = {
-                            timestamp: timestamp, 
-                            status: CODE_STATUS.LOGOUT.TOKEN_ENABLE
-                        };
-                        resolve(response);
+                        response.status = CODE_STATUS.LOGOUT.TOKEN_ENABLE;
                     }
                     else {
-                        let response = {
-                            timestamp: timestamp,
-                            status: CODE_STATUS.LOGOUT.INVALID_OR_DISABLE_TOKEN
-                        };
-                        resolve(response);
+                        response.status = CODE_STATUS.LOGOUT.INVALID_OR_DISABLE_TOKEN;
                     }
+                    resolve(response);
                 });
             });
         });
@@ -278,21 +229,15 @@ class AuthDatabase {
                 let sql = "UPDATE sessions SET status = 0 WHERE token = ?";
 
                 database.run(sql, token, (err) => {
-                    let timestamp = moment().format();
+                    let response = { timestamp: moment().format() };
 
                     if (err) {
-                        let response = {
-                            timestamp: timestamp,
-                            status: CODE_STATUS.QUERY_ERROR,
-                            err: err.message
-                        }
+                        response.status = CODE_STATUS.QUERY_ERROR;
+                        response.error = err.message;
                         reject(response);
                     }
                     else {
-                        let response = {
-                            timestamp: timestamp,
-                            status: CODE_STATUS.LOGOUT.SUCCESS
-                        };
+                        response.status = CODE_STATUS.LOGOUT.SUCCESS;
                         resolve(response);
                     }
                 });
